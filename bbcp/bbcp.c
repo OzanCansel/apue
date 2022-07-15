@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <libgen.h>
@@ -10,29 +11,13 @@
 void
 print_err();
 
+void
+check_args( int argc , char** argv );
+
 int
 main( int argc , char** argv )
 {
-	if ( argc == 1 )
-	{
-		fprintf( stderr , "Source is not specified.\n" );
-
-		return 1;
-	}
-
-	if ( argc == 2 ) 
-	{
-		fprintf( stderr , "Destination not specified.\n" );
-
-		return 1;
-	}
-
-	if ( argc > 3 )
-	{
-		fprintf( stderr , "Too many arguments.\n" );
-
-		return 1;
-	}
+	check_args( argc , argv );
 
 	struct stat src_info;
 
@@ -150,4 +135,28 @@ void
 print_err()
 {
 	fprintf( stderr , "%s\n" , strerror( errno ) );
+}
+
+void check_args( int argc , char** argv )
+{
+	if ( argc == 2 )
+	{
+		fprintf( stderr , "Destination not specified.\n" );
+
+		exit( EXIT_FAILURE );
+	}
+
+	if ( argc == 2 )
+	{
+		fprintf( stderr , "Destination not specified.\n" );
+
+		exit( EXIT_FAILURE );
+	}
+
+	if ( argc > 3 )
+	{
+		fprintf( stderr , "Too many arguments.\n" );
+
+		exit( EXIT_FAILURE );
+	}
 }
