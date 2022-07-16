@@ -119,7 +119,7 @@ main( int argc , char** argv )
     char buffer[ src_info.st_blksize ];
     int  read_bytes = 0;
 
-    while( ( read_bytes = read( src_fd , buffer , src_info.st_blksize ) ) )
+    while ( ( read_bytes = read( src_fd , buffer , src_info.st_blksize ) ) )
     {
         if ( read_bytes == -1 )
         {
