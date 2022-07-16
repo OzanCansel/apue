@@ -70,7 +70,7 @@ main( int argc , char** argv )
 		return 1;
 	}
 
-	const char* filename =  argv[ 2 ];
+	const char* dst =  argv[ 2 ];
 
 	if ( !is_not_dir && S_ISDIR( dst_info.st_mode ) ) 
 	{
@@ -81,9 +81,9 @@ main( int argc , char** argv )
 			return 1;
 		}
 		
-		filename = basename( argv[ 1 ] );
+		dst = basename( argv[ 1 ] );
 
-		if ( stat( filename , &dst_info) == -1 )
+		if ( stat( dst , &dst_info) == -1 )
 		{
 			if ( errno != ENOENT )
 			{
@@ -101,7 +101,7 @@ main( int argc , char** argv )
 			"%s:%s and %s are hard linked to the same inode.\n" ,
 			argv[ 0 ] ,
 			argv[ 1 ] ,
-			filename
+			dst
 		);
 
 		return 1;
@@ -109,7 +109,7 @@ main( int argc , char** argv )
 
 	int dst_fd;
 
-	if ( ( dst_fd = open( filename , O_CREAT | O_TRUNC | O_WRONLY , src_info.st_mode ) ) == -1  )
+	if ( ( dst_fd = open( dst , O_CREAT | O_TRUNC | O_WRONLY , src_info.st_mode ) ) == -1  )
 	{
 		perror( argv[ 0 ] );
 
