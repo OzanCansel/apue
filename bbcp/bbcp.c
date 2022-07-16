@@ -9,9 +9,6 @@
 #include <sys/stat.h>
 
 void
-print_err();
-
-void
 check_args( int argc , char** argv );
 
 int
@@ -23,21 +20,31 @@ main( int argc , char** argv )
 
 	if ( stat( argv[ 1 ] , &src_info ) )
 	{
-		print_err();
+		perror( argv[ 0 ] );
 
 		return 1;
 	}
 
 	if ( S_ISDIR( src_info.st_mode ) )
 	{
-		fprintf( stderr , "%s is directory.\n" , argv[ 1 ] );
+		fprintf(
+			stderr ,
+			"%s:%s is directory.\n" ,
+			argv[ 0 ] ,
+			argv[ 1 ]
+		);
 
 		return 1;
 	}
 
 	if ( S_ISSOCK( src_info.st_mode ) )
 	{
-		fprintf( stderr , "%s is socket.\n" , argv[ 1 ] );
+		fprintf(
+			stderr ,
+			"%s:%s is socket.\n" ,
+			argv[ 0 ] ,
+			argv[ 1 ]
+		);
 
 		return 1;
 	}
@@ -50,7 +57,7 @@ main( int argc , char** argv )
 		if ( errno == ENOENT )
 			is_not_dir = 1;
 		else
-			print_err();
+			perror( argv[ 0 ] );
 	}
 
 
@@ -58,7 +65,7 @@ main( int argc , char** argv )
 
 	if ( ( src_fd = open( argv[ 1 ] , O_RDONLY ) ) == -1 )
 	{
-		print_err();
+		perror( argv[ 0 ] );
 
 		return 1;
 	}
@@ -69,7 +76,7 @@ main( int argc , char** argv )
 	{
 		if ( chdir( argv[ 2 ] ) == -1 )
 		{
-			print_err();
+			perror( argv[ 0 ] );
 
 			return 1;
 		}
@@ -80,7 +87,7 @@ main( int argc , char** argv )
 		{
 			if ( errno != ENOENT )
 			{
-				print_err();
+				perror( argv[ 0 ] );
 
 				return 1;
 			}
@@ -91,7 +98,8 @@ main( int argc , char** argv )
 	{
 		fprintf(
 			stderr ,
-			"%s and %s are hard linked to the same inode.\n" ,
+			"%s:%s and %s are hard linked to the same inode.\n" ,
+			argv[ 0 ] ,
 			argv[ 1 ] ,
 			filename
 		);
@@ -103,7 +111,7 @@ main( int argc , char** argv )
 
 	if ( ( dst_fd = open( filename , O_CREAT | O_TRUNC | O_WRONLY , src_info.st_mode ) ) == -1  )
 	{
-		print_err();
+		perror( argv[ 0 ] );
 
 		return 1;
 	}
@@ -115,26 +123,20 @@ main( int argc , char** argv )
 	{
 		if ( read_bytes == -1 )
 		{
-			print_err();
+			perror( argv[ 0 ] );
 
 			return 1;
 		}
 
 		if ( write( dst_fd , buffer , read_bytes ) == -1 )
 		{
-			print_err();
+			perror( argv[ 0 ] );
 
 			return 1;
 		}
 	}
 
 	return 0;
-}
-
-void
-print_err()
-{
-	fprintf( stderr , "%s\n" , strerror( errno ) );
 }
 
 void check_args( int argc , char** argv )
