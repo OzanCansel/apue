@@ -139,9 +139,9 @@ print_err()
 
 void check_args( int argc , char** argv )
 {
-	if ( argc == 2 )
+	if ( argc == 1 )
 	{
-		fprintf( stderr , "Destination not specified.\n" );
+		fprintf( stderr , "Source not specified.\n" );
 
 		exit( EXIT_FAILURE );
 	}
