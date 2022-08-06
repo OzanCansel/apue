@@ -20,7 +20,7 @@ main( int argc , char** argv )
 
     if ( stat( argv[ 1 ] , &src_info ) )
     {
-        perror( argv[ 0 ] );
+        perror( getprogname() );
 
         return 1;
     }
@@ -30,7 +30,7 @@ main( int argc , char** argv )
         fprintf(
             stderr ,
             "%s:%s is directory.\n" ,
-            argv[ 0 ] ,
+            getprogname() ,
             argv[ 1 ]
         );
 
@@ -42,7 +42,7 @@ main( int argc , char** argv )
         fprintf(
             stderr ,
             "%s:%s is socket.\n" ,
-            argv[ 0 ] ,
+            getprogname() ,
             argv[ 1 ]
         );
 
@@ -57,7 +57,7 @@ main( int argc , char** argv )
         if ( errno == ENOENT )
             is_not_dir = 1;
         else
-            perror( argv[ 0 ] );
+            perror( getprogname() );
     }
 
 
@@ -65,7 +65,7 @@ main( int argc , char** argv )
 
     if ( ( src_fd = open( argv[ 1 ] , O_RDONLY ) ) == -1 )
     {
-        perror( argv[ 0 ] );
+        perror( getprogname() );
 
         return 1;
     }
@@ -76,7 +76,7 @@ main( int argc , char** argv )
     {
         if ( chdir( argv[ 2 ] ) == -1 )
         {
-            perror( argv[ 0 ] );
+            perror( getprogname() );
 
             return 1;
         }
@@ -87,7 +87,7 @@ main( int argc , char** argv )
         {
             if ( errno != ENOENT )
             {
-                perror( argv[ 0 ] );
+                perror( getprogname() );
 
                 return 1;
             }
@@ -99,7 +99,7 @@ main( int argc , char** argv )
         fprintf(
             stderr ,
             "%s:%s and %s are hard linked to the same inode.\n" ,
-            argv[ 0 ] ,
+            getprogname() ,
             argv[ 1 ] ,
             dst
         );
@@ -111,7 +111,7 @@ main( int argc , char** argv )
 
     if ( ( dst_fd = open( dst , O_CREAT | O_TRUNC | O_WRONLY , src_info.st_mode ) ) == -1  )
     {
-        perror( argv[ 0 ] );
+        perror( getprogname() );
 
         return 1;
     }
@@ -123,14 +123,14 @@ main( int argc , char** argv )
     {
         if ( read_bytes == -1 )
         {
-            perror( argv[ 0 ] );
+            perror( getprogname() );
 
             return 1;
         }
 
         if ( write( dst_fd , buffer , read_bytes ) == -1 )
         {
-            perror( argv[ 0 ] );
+            perror( getprogname() );
 
             return 1;
         }
@@ -143,7 +143,7 @@ void check_args( int argc , char** argv )
 {
     if ( argc == 1 )
     {
-        fprintf( stderr , "Source not specified.\n" );
+        fprintf( stderr , "%s: Source not specified.\n" , getprogname() );
 
         exit( EXIT_FAILURE );
     }
