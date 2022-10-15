@@ -110,6 +110,8 @@ partition_files_and_dirs( const char** beg , const char** end )
         else
         {
             perror( __func__ );
+
+            ++beg;
         }
     }
 
