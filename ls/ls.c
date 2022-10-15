@@ -13,15 +13,18 @@ int  count_files_in_dir( const char* );
 void print_dir_content( const char* );
 void print_file_entry( const char* );
 int is_hidden( const char* filename );
+int is_dot_or_dot_dot( const char* filename );
 int is_last_itr( void* itr , void* end , int size );
 
 struct
 {
     int multiple_entries;
     int show_hidden;
+    int show_dot_and_dot_dot;
 } opts = {
-    .multiple_entries = 0 ,
-    .show_hidden      = 0
+    .multiple_entries     = 0 ,
+    .show_hidden          = 0 ,
+    .show_dot_and_dot_dot = 1
 };
 
 int
@@ -33,7 +36,10 @@ main( int argc , char** argv )
         switch ( arg )
         {
             case 'A' :
+                opts.show_dot_and_dot_dot = 0;
             case 'a' :
+                opts.show_hidden = 1;
+                break;
             case 'c' :
             case 'd' :
             case 'F' :
@@ -167,6 +173,9 @@ count_files_in_dir( const char* dir )
             if ( !opts.show_hidden && is_hidden( entry->d_name ) )
                 continue;
 
+            if ( !opts.show_dot_and_dot_dot && is_dot_or_dot_dot( entry->d_name ) )
+                continue;
+
             ++n_files;
         }
 
@@ -197,6 +206,9 @@ print_dir_content( const char* dir )
         while( ( entry = readdir( dir_p ) ) )
         {
             if ( !opts.show_hidden && is_hidden( entry->d_name ) )
+                continue;
+
+            if ( !opts.show_dot_and_dot_dot && is_dot_or_dot_dot( entry->d_name ) )
                 continue;
 
             int len         = strlen( entry->d_name );
@@ -243,6 +255,13 @@ int
 is_hidden( const char* filename )
 {
     return filename[ 0 ] == '.';
+}
+
+int
+is_dot_or_dot_dot( const char* filename )
+{
+    return ( filename[ 0 ] == '.' && filename[ 1 ] == '\0' ) ||
+           ( filename[ 0 ] == '.' && filename[ 1 ] == '.' && filename[ 2 ] == '\0' );
 }
 
 int
