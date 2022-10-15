@@ -116,7 +116,8 @@ partition_files_and_dirs( const char** beg , const char** end )
     return beg;
 }
 
-int cmpstring( const void* x , const void* y )
+int
+cmpstring( const void* x , const void* y )
 {
     return strcmp( *(const char**)x , *(const char**)y );
 }
