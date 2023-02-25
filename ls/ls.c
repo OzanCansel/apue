@@ -5,16 +5,16 @@
 #include <sys/stat.h>
 #include <dirent.h>
 
-void not_implemented_yet( char opt );
-const char** partition_existents( const char** beg , const char** end );
-const char** partition_files_and_dirs( const char** beg , const char** end );
-int cmpstring( const void* x , const void* y );
-int  count_files_in_dir( const char* );
-void print_dir_content( const char* );
-void print_file_entry( const char* );
-int is_hidden( const char* filename );
-int is_dot_or_dot_dot( const char* filename );
-int is_last_itr( void* itr , void* end , int size );
+void not_implemented_yet(char opt);
+const char** partition_existents(const char** beg, const char** end);
+const char** partition_files_and_dirs(const char** beg, const char** end);
+int cmpstring(const void* x, const void* y);
+int  count_files_in_dir(const char*);
+void print_dir_content(const char*);
+void print_file_entry(const char*);
+int is_hidden(const char* filename);
+int is_dot_or_dot_dot(const char* filename);
+int is_last_itr(void* itr, void* end, int size);
 
 struct
 {
@@ -28,12 +28,13 @@ struct
 };
 
 int
-main( int argc , char** argv )
+main(int argc , char** argv)
 {
     int arg;
 
-    while ( ( arg = getopt( argc , argv , "AacdFfhiklnqRrSstuw" ) ) != -1 )
-        switch ( arg )
+    while ((arg = getopt(argc, argv, "AacdFfhiklnqRrSstuw")) != -1)
+    {
+        switch (arg)
         {
             case 'A' :
                 opts.show_dot_and_dot_dot = 0;
@@ -57,38 +58,87 @@ main( int argc , char** argv )
             case 't' :
             case 'u' :
             case 'w' :
-                not_implemented_yet( arg );
+                not_implemented_yet(arg);
         }
+    }
 
-    const char** begin      = ( const char** )( argv + optind );
-    const char** end        = ( const char** )( argv + argc );
-    end                     = partition_existents( begin , end );
-    const char** files_end  = partition_files_and_dirs( begin , end );
+    int n_args = argc - optind;
+    int args_array_size = n_args;
+
+    if (!n_args)
+        args_array_size++;
+
+    char* files_dirs[args_array_size];
+
+    if (!n_args)
+    {
+        files_dirs[0] = ".";
+    }
+    else
+    {
+        char** curr;
+        char** dst;
+        char** end;
+
+        for (
+                curr = argv + optind, end = argv + argc, dst = files_dirs;
+                curr != end;
+                ++curr, ++dst
+            )
+        {
+            size_t src_len = strlen(*curr);
+            *dst = malloc(src_len);
+            strcpy(*dst, *curr);
+        }
+    }
+
+    const char** begin      = (const char**)(files_dirs);
+    const char** end        = (const char**)(files_dirs + args_array_size);
+    end                     = partition_existents(begin, end);
+    const char** files_end  = partition_files_and_dirs(begin, end);
     const char** dirs_begin = files_end;
     const char** dirs_end   = end;
 
-    qsort( begin      , files_end - begin     , sizeof( char* ) , cmpstring );
-    qsort( dirs_begin , dirs_end - dirs_begin , sizeof( char* ) , cmpstring );
+    // Pointer visualization
+    // [ file_1, file_2, dir_1, dir_2, dir_3 ]
+    //  ^ begin         ^ files_end         ^ dirs_end
+    //                    dirs_begin
+
+    qsort(begin     , files_end - begin    , sizeof(char*), cmpstring);
+    qsort(dirs_begin, dirs_end - dirs_begin, sizeof(char*), cmpstring);
 
     opts.multiple_entries = end - begin != 1;
-    int at_least_a_file_and_a_dir = opts.multiple_entries && ( dirs_end - dirs_begin ) >= 1;
+    int any_files         = begin != files_end;
+    int any_dirs          = dirs_begin != dirs_end;
+    int multiple_dirs     = opts.multiple_entries && (dirs_end - dirs_begin) >= 1;
 
     const char** itr = begin;
-    for ( ; itr != files_end; ++itr )
-        print_file_entry( *itr );
+    for ( ; itr != files_end; ++itr)
+        print_file_entry(*itr);
 
     itr = dirs_begin;
-    for ( ; itr != dirs_end; ++itr )
-    {
-        print_dir_content( *itr );
 
-        if ( at_least_a_file_and_a_dir && !is_last_itr( itr , dirs_end , sizeof( itr ) ) )
-            printf( "\n\n" );
+    if (!any_dirs)
+    {
+        printf("\n");
+    }
+    else
+    {
+        if (any_files)
+            printf("\n\n");
+
+        for ( ; itr != dirs_end; ++itr)
+        {
+            print_dir_content(*itr);
+
+            if (multiple_dirs && !is_last_itr(itr, dirs_end, sizeof(itr)))
+                printf("\n\n");
+        }
     }
 }
 
 void
-not_implemented_yet( char opt )
+not_implemented_yet(char opt)
 {
     dprintf(
         STDERR_FILENO ,
@@ -98,20 +148,20 @@ not_implemented_yet( char opt )
 }
 
 const char**
-partition_existents( const char** beg , const char** end )
+partition_existents(const char** curr, const char** end)
 {
-    while ( beg != end )
+    while (curr != end)
     {
-        if ( access( *beg , F_OK ) == 0 )
+        if (access(*curr, F_OK) == 0)
         {
-            beg++;
+            curr++;
         }
         else
         {
-            const char* temp = *beg;
+            const char* temp = *curr;
 
             --end;
-            *beg = *end;
+            *curr = *end;
             *end = temp;
         }
     }
@@ -120,70 +170,70 @@ partition_existents( const char** beg , const char** end )
 }
 
 const char**
-partition_files_and_dirs( const char** beg , const char** end )
+partition_files_and_dirs(const char** curr, const char** end)
 {
-    while ( beg != end )
+    while (curr != end)
     {
         struct stat sb;
 
-        if ( stat( *beg , &sb ) != -1 )
+        if (stat(*curr, &sb) != -1)
         {
-            if ( S_ISDIR( sb.st_mode ) )
+            if (S_ISDIR(sb.st_mode))
             {
-                const char* temp = *beg;
+                const char* temp = *curr;
 
                 --end;
-                *beg = *end;
+                *curr = *end;
                 *end = temp;
             }
             else
             {
-                ++beg;
+                ++curr;
             }
         }
         else
         {
-            perror( __func__ );
+            perror(__func__);
 
-            ++beg;
+            ++curr;
         }
     }
 
-    return beg;
+    return curr;
 }
 
 int
-cmpstring( const void* x , const void* y )
+cmpstring(const void* x, const void* y)
 {
-    return strcmp( *(const char**)x , *(const char**)y );
+    return strcmp(*(const char**)x ,*(const char**)y);
 }
 
 int
-count_files_in_dir( const char* dir )
+count_files_in_dir(const char* dir)
 {
     int  n_files = 0;
     DIR* dir_p;
 
-    if ( ( dir_p = opendir( dir ) ) )
+    if ((dir_p = opendir(dir)))
     {
         struct dirent* entry;
 
-        while( ( entry = readdir( dir_p ) ) )
+        while((entry = readdir( dir_p )))
         {
-            if ( !opts.show_hidden && is_hidden( entry->d_name ) )
+            if (!opts.show_hidden && is_hidden(entry->d_name))
                 continue;
 
-            if ( !opts.show_dot_and_dot_dot && is_dot_or_dot_dot( entry->d_name ) )
+            if (!opts.show_dot_and_dot_dot && is_dot_or_dot_dot(entry->d_name))
                 continue;
 
             ++n_files;
         }
 
-        closedir( dir_p );
+        closedir(dir_p);
     }
     else
     {
-        perror( __func__ );
+        perror(__func__);
 
         return -1;
     }
@@ -192,80 +242,80 @@ count_files_in_dir( const char* dir )
 }
 
 void
-print_dir_content( const char* dir )
+print_dir_content(const char* dir)
 {
-    int n_files = count_files_in_dir( dir );
-    char** file_names  = ( char** )malloc( sizeof( const char* ) * n_files );
-    const char** begin = ( const char** )file_names;
+    int n_files        = count_files_in_dir(dir);
+    char** file_names  = (char** )malloc(sizeof(const char*) * n_files);
+    const char** begin = (const char**)file_names;
     DIR* dir_p;
 
-    if ( ( dir_p = opendir( dir ) ) )
+    if ((dir_p = opendir( dir )))
     {
         struct dirent* entry;
 
-        while( ( entry = readdir( dir_p ) ) )
+        while ((entry = readdir(dir_p)))
         {
-            if ( !opts.show_hidden && is_hidden( entry->d_name ) )
+            if (!opts.show_hidden && is_hidden(entry->d_name))
                 continue;
 
-            if ( !opts.show_dot_and_dot_dot && is_dot_or_dot_dot( entry->d_name ) )
+            if (!opts.show_dot_and_dot_dot && is_dot_or_dot_dot(entry->d_name))
                 continue;
 
-            int len         = strlen( entry->d_name );
-            char* fname_str = malloc( len );
+            int len         = strlen(entry->d_name);
+            char* fname_str = malloc(len);
 
-            strcpy( fname_str , entry->d_name );
+            strcpy(fname_str, entry->d_name);
 
             *begin = fname_str;
             ++begin;
         }
 
-        closedir( dir_p );
+        closedir(dir_p);
     }
     else
     {
-        perror( __func__ );
+        perror(__func__);
     }
 
-    qsort( file_names , n_files , sizeof( char* ) , cmpstring );
+    qsort(file_names, n_files, sizeof( char* ), cmpstring);
 
-    if ( opts.multiple_entries )
-        printf( "%s:\n" , dir );
+    if (opts.multiple_entries)
+        printf("%s:\n", dir);
 
     int i;
-    for ( i = 0; i < n_files; ++i )
-        print_file_entry( file_names[ i ] );
+    for (i = 0; i < n_files; ++i)
+        print_file_entry(file_names[i]);
 
-    if ( n_files )
-        printf( "\n" );
+    if (n_files)
+        printf("\n");
 
-    for ( i = 0; i < n_files; ++i )
-        free( file_names[ i ] );
+    for (i = 0; i < n_files; ++i)
+        free(file_names[i]);
 
-    free( file_names );
+    free(file_names);
 }
 
 void
-print_file_entry( const char* fname )
+print_file_entry(const char* fname)
 {
-    printf( "%s  " , fname );
+    printf("%s  ", fname);
 }
 
 int
-is_hidden( const char* filename )
+is_hidden(const char* filename)
 {
-    return filename[ 0 ] == '.';
+    return filename[0] == '.';
 }
 
 int
-is_dot_or_dot_dot( const char* filename )
+is_dot_or_dot_dot(const char* filename)
 {
-    return ( filename[ 0 ] == '.' && filename[ 1 ] == '\0' ) ||
-           ( filename[ 0 ] == '.' && filename[ 1 ] == '.' && filename[ 2 ] == '\0' );
+    return (filename[0] == '.' && filename[1] == '\0') ||
+           (filename[0] == '.' && filename[1] == '.' && filename[2] == '\0');
 }
 
 int
-is_last_itr( void* itr , void* end , int size )
+is_last_itr(void* itr, void* end, int size)
 {
-    return ( ( end - itr ) / size ) == 1;
+    return (( end - itr) / size) == 1;
 }
