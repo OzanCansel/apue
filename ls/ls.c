@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <dirent.h>
+#include <sys/stat.h>
 
 void not_implemented_yet(char opt);
 const char** partition_existents(const char** beg, const char** end);
