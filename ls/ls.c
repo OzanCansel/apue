@@ -27,13 +27,15 @@ struct
     int dont_print_directory_content;
     int file_type_suffix;
     int output_is_not_sorted;
+    int show_blocks;
 } opts = {
     .multiple_entries             = 0 ,
     .show_hidden                  = 0 ,
     .show_dot_and_dot_dot         = 1 ,
     .dont_print_directory_content = 0 ,
     .file_type_suffix             = 0 ,
-    .output_is_not_sorted         = 0
+    .output_is_not_sorted         = 0 ,
+    .show_blocks                  = 0
 };
 
 int
@@ -59,6 +61,9 @@ main(int argc , char** argv)
             case 'f' :
                 opts.output_is_not_sorted = 1;
                 break;
+            case 's' :
+                opts.show_blocks = 1;
+                break;
             case 'c' :
             case 'h' :
             case 'i' :
@@ -69,7 +74,6 @@ main(int argc , char** argv)
             case 'R' :
             case 'r' :
             case 'S' :
-            case 's' :
             case 't' :
             case 'u' :
             case 'w' :
@@ -322,25 +326,32 @@ void
 print_file_entry(const char* fname)
 {
     char suffix[] = "\0\0";
+    char n_blocks[64] = "\0";
 
-    if (opts.file_type_suffix)
+    if (opts.file_type_suffix || opts.show_blocks)
     {
         struct stat sb;
 
         if (lstat(fname, &sb) != -1)
         {
-            if (S_ISDIR(sb.st_mode))
-                suffix[0] = '/';
-            else if(S_ISLNK(sb.st_mode))
-                suffix[0] = '@';
-            else if(sb.st_mode & S_IXUSR)
-                suffix[0] = '*';
-            else if(S_ISWHT(sb.st_mode))
-                suffix[0] = '%';
-            else if(S_ISSOCK(sb.st_mode))
-                suffix[0] = '=';
-            else if(S_ISFIFO(sb.st_mode))
-                suffix[0] = '|';
+            if (opts.file_type_suffix)
+            {
+                if (S_ISDIR(sb.st_mode))
+                    suffix[0] = '/';
+                else if(S_ISLNK(sb.st_mode))
+                    suffix[0] = '@';
+                else if(sb.st_mode & S_IXUSR)
+                    suffix[0] = '*';
+                else if(S_ISWHT(sb.st_mode))
+                    suffix[0] = '%';
+                else if(S_ISSOCK(sb.st_mode))
+                    suffix[0] = '=';
+                else if(S_ISFIFO(sb.st_mode))
+                    suffix[0] = '|';
+            }
+
+            if (opts.show_blocks)
+                sprintf(n_blocks, "%lu %c", sb.st_blocks, '\0');
         }
         else
         {
@@ -348,7 +359,7 @@ print_file_entry(const char* fname)
         }
     }
 
-    printf("%s%s  ", fname, suffix);
+    printf("%s%s%s  ", n_blocks, fname, suffix);
 }
 
 int
