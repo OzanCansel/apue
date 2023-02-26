@@ -145,6 +145,14 @@ main(int argc , char** argv)
                 printf("\n\n");
         }
     }
+
+    {
+        char** itr = files_dirs;
+        char** end = files_dirs + n_args;
+
+        for ( ; itr != end; ++itr)
+            free(*itr);
+    }
 }
 
 void
