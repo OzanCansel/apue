@@ -21,10 +21,12 @@ struct
     int multiple_entries;
     int show_hidden;
     int show_dot_and_dot_dot;
+    int dont_print_directory_content;
 } opts = {
-    .multiple_entries     = 0 ,
-    .show_hidden          = 0 ,
-    .show_dot_and_dot_dot = 1
+    .multiple_entries             = 0 ,
+    .show_hidden                  = 0 ,
+    .show_dot_and_dot_dot         = 1 ,
+    .dont_print_directory_content = 0
 };
 
 int
@@ -41,8 +43,10 @@ main(int argc , char** argv)
             case 'a' :
                 opts.show_hidden = 1;
                 break;
-            case 'c' :
             case 'd' :
+                opts.dont_print_directory_content = 1;
+                break;
+            case 'c' :
             case 'F' :
             case 'f' :
             case 'h' :
@@ -62,7 +66,7 @@ main(int argc , char** argv)
         }
     }
 
-    int n_args = argc - optind;
+    int n_args          = argc - optind;
     int args_array_size = n_args;
 
     if (!n_args)
@@ -106,6 +110,12 @@ main(int argc , char** argv)
 
     qsort(begin     , files_end - begin    , sizeof(char*), cmpstring);
     qsort(dirs_begin, dirs_end - dirs_begin, sizeof(char*), cmpstring);
+
+    if (opts.dont_print_directory_content)
+    {
+        files_end  = dirs_end;
+        dirs_begin = dirs_end;
+    }
 
     opts.multiple_entries = end - begin != 1;
     int any_files         = begin != files_end;
@@ -178,7 +188,7 @@ partition_files_and_dirs(const char** curr, const char** end)
 
         if (stat(*curr, &sb) != -1)
         {
-            if (S_ISDIR(sb.st_mode))
+            if (S_ISDIR(sb.st_mode) ^ opts.dont_print_directory_content)
             {
                 const char* temp = *curr;
 
