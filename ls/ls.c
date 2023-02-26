@@ -22,11 +22,15 @@ struct
     int show_hidden;
     int show_dot_and_dot_dot;
     int dont_print_directory_content;
+    int file_type_suffix;
+    int output_is_not_sorted;
 } opts = {
     .multiple_entries             = 0 ,
     .show_hidden                  = 0 ,
     .show_dot_and_dot_dot         = 1 ,
-    .dont_print_directory_content = 0
+    .dont_print_directory_content = 0 ,
+    .file_type_suffix             = 0 ,
+    .output_is_not_sorted         = 0
 };
 
 int
@@ -46,9 +50,13 @@ main(int argc , char** argv)
             case 'd' :
                 opts.dont_print_directory_content = 1;
                 break;
-            case 'c' :
             case 'F' :
+                opts.file_type_suffix = 1;
+                break;
             case 'f' :
+                opts.output_is_not_sorted = 1;
+                break;
+            case 'c' :
             case 'h' :
             case 'i' :
             case 'k' :
@@ -108,8 +116,11 @@ main(int argc , char** argv)
     //  ^ begin         ^ files_end         ^ dirs_end
     //                    dirs_begin
 
-    qsort(begin     , files_end - begin    , sizeof(char*), cmpstring);
-    qsort(dirs_begin, dirs_end - dirs_begin, sizeof(char*), cmpstring);
+    if (!opts.output_is_not_sorted)
+    {
+        qsort(begin     , files_end - begin    , sizeof(char*), cmpstring);
+        qsort(dirs_begin, dirs_end - dirs_begin, sizeof(char*), cmpstring);
+    }
 
     if (opts.dont_print_directory_content)
     {
@@ -300,7 +311,8 @@ print_dir_content(const char* dir)
         perror(__func__);
     }
 
-    qsort(file_names, n_files, sizeof( char* ), cmpstring);
+    if (!opts.output_is_not_sorted)
+        qsort(file_names, n_files, sizeof( char* ), cmpstring);
 
     if (opts.multiple_entries)
         printf("%s:\n", dir);
@@ -321,7 +333,46 @@ print_dir_content(const char* dir)
 void
 print_file_entry(const char* fname)
 {
-    printf("%s  ", fname);
+    char suffix[] = "\0\0";
+
+    if (opts.file_type_suffix)
+    {
+        struct stat sb;
+
+        if (lstat(fname, &sb) != -1)
+        {
+            if (S_ISDIR(sb.st_mode))
+            {
+                suffix[0] = '/';
+            }
+            else if(S_ISLNK(sb.st_mode))
+            {
+                suffix[0] = '@';
+            }
+            else if(sb.st_mode & S_IXUSR)
+            {
+                suffix[0] = '*';
+            }
+            else if(S_ISWHT(sb.st_mode))
+            {
+                suffix[0] = '%';
+            }
+            else if(S_ISSOCK(sb.st_mode))
+            {
+                suffix[0] = '=';
+            }
+            else if(S_ISFIFO(sb.st_mode))
+            {
+                suffix[0] = '|';
+            }
+        }
+        else
+        {
+            perror(__func__);
+        }
+    }
+
+    printf("%s%s  ", fname, suffix);
 }
 
 int
