@@ -176,6 +176,11 @@ partition_existents(const char** curr, const char** end)
         }
         else
         {
+            int file_len = strlen(*curr);
+            char error_prefix[file_len + 16];
+            sprintf(error_prefix, "Cannot access '%s'", *curr);
+            perror(error_prefix);
+
             const char* temp = *curr;
 
             --end;
