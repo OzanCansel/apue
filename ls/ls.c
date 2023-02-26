@@ -16,6 +16,8 @@ void print_file_entry(const char*);
 int is_hidden(const char* filename);
 int is_dot_or_dot_dot(const char* filename);
 int is_last_itr(void* itr, void* end, int size);
+void copy_str_array(const char** src_beg, const char** src_end, const char** dst);
+void free_str_array(char** beg, char** end);
 
 struct
 {
@@ -89,20 +91,11 @@ main(int argc , char** argv)
     }
     else
     {
-        char** curr;
-        char** dst;
-        char** end;
-
-        for (
-                curr = argv + optind, end = argv + argc, dst = files_dirs;
-                curr != end;
-                ++curr, ++dst
-            )
-        {
-            size_t src_len = strlen(*curr);
-            *dst = malloc(src_len);
-            strcpy(*dst, *curr);
-        }
+        copy_str_array(
+            (const char**)argv + optind,
+            (const char**)argv + argc,
+            (const char**)files_dirs
+        );
     }
 
     const char** begin      = (const char**)(files_dirs);
@@ -156,13 +149,7 @@ main(int argc , char** argv)
         }
     }
 
-    {
-        char** itr = files_dirs;
-        char** end = files_dirs + n_args;
-
-        for ( ; itr != end; ++itr)
-            free(*itr);
-    }
+    free_str_array(files_dirs, files_dirs + n_args);
 }
 
 void
@@ -321,9 +308,7 @@ print_dir_content(const char* dir)
     if (n_files)
         printf("\n");
 
-    int i;
-    for (i = 0; i < n_files; ++i)
-        free(file_names[i]);
+    free_str_array(file_names, file_names + n_files);
 }
 
 void
@@ -383,4 +368,23 @@ int
 is_last_itr(void* itr, void* end, int size)
 {
     return (( end - itr) / size) == 1;
+}
+
+void
+copy_str_array(const char** src_curr, const char** src_end, const char** dst)
+{
+    for ( ; src_curr != src_end; ++src_curr, ++dst)
+    {
+        size_t len = strlen(*src_curr);
+        const char* str = (const char*)malloc(len);
+        strcpy((char*)str, (char*)*src_curr);
+        *dst = str;
+    }
+}
+
+void
+free_str_array(char** beg, char** end)
+{
+    for( ; beg != end; ++beg)
+        free(*beg);
 }
