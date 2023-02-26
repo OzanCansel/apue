@@ -342,29 +342,17 @@ print_file_entry(const char* fname)
         if (lstat(fname, &sb) != -1)
         {
             if (S_ISDIR(sb.st_mode))
-            {
                 suffix[0] = '/';
-            }
             else if(S_ISLNK(sb.st_mode))
-            {
                 suffix[0] = '@';
-            }
             else if(sb.st_mode & S_IXUSR)
-            {
                 suffix[0] = '*';
-            }
             else if(S_ISWHT(sb.st_mode))
-            {
                 suffix[0] = '%';
-            }
             else if(S_ISSOCK(sb.st_mode))
-            {
                 suffix[0] = '=';
-            }
             else if(S_ISFIFO(sb.st_mode))
-            {
                 suffix[0] = '|';
-            }
         }
         else
         {
